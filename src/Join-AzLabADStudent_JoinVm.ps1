@@ -36,7 +36,8 @@ Password of the Domain User.
     -LocalUser 'localUser' `
     -DomainUser 'domainUser' `
     -LocalPassword 'localPassword' `
-    -DomainPassword 'domainPassword'
+    -DomainPassword 'domainPassword' `
+    -OUPath 'OU=testOU,DC=domain,DC=Domain,DC=com'
 #>
 
 [CmdletBinding()]
@@ -77,6 +78,10 @@ param(
     [ValidateNotNullOrEmpty()]
     [string] $DomainPassword,
 
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
+    [string]
+    $OUPath,
+
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Name of the task this script is run from (optional).")]
     [string]
     $CurrentTaskName
@@ -110,8 +115,12 @@ try {
 
     # Domain join the current VM
     Write-LogFile "Joining computer '$env:COMPUTERNAME' to domain '$Domain'"
-
-    Add-Computer -DomainName $Domain -Credential $domainCredential -Force
+    if ($OUpath) {
+        Add-Computer -DomainName $Domain -Credential $domainCredential -OUPath $OUPath -Force
+    }
+    else {
+        Add-Computer -DomainName $Domain -Credential $domainCredential -Force
+    }
     Write-LogFile "This VM has successfully been joined to the AD domain '$Domain'"
 
     # Register Add Student script to run at next startup

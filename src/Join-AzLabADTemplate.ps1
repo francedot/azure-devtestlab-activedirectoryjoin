@@ -27,7 +27,8 @@ Password of the Domain User.
     -LocalUser 'localUser' `
     -DomainUser 'domainUser' `
     -LocalPassword 'localPassword' `
-    -DomainPassword 'domainPassword'
+    -DomainPassword 'domainPassword `
+    -OUPath 'OU=testOU,DC=domain,DC=Domain,DC=com'
 #>
 
 [CmdletBinding()]
@@ -54,7 +55,11 @@ param(
 
     [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Password of the Domain User.")]
     [ValidateNotNullOrEmpty()]
-    [string] $DomainPassword
+    [string] $DomainPassword,
+    
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
+    [string]
+    $OUPath
 )
 
 ###################################################################################################
@@ -93,6 +98,7 @@ try {
         -DomainUser $DomainUser `
         -LocalPassword $LocalPassword `
         -DomainPassword $DomainPassword `
+        -OUPath $OUPath `
         -ScriptName $JoinAzLabADStudentRenameVmScriptName
 
     Write-Output "Publishing the Lab"
