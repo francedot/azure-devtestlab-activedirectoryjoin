@@ -15,12 +15,12 @@ try {
 
     . ".\Utils.ps1"
 
-    Write-Host "Importing AzLab Module"
+    Write-Output "Importing AzLab Module"
     Import-AzLabModule
 
     $templateVm = Get-AzLabCurrentTemplateVm
 
-    Write-Host "Getting information on the currently running Template VM"
+    Write-Output "Getting information on the currently running Template VM"
 
     $lab = $templateVm | Get-AzLabForVm
 
@@ -74,6 +74,6 @@ catch
 
 finally {
 
-    Write-Host "Exiting with $ExitCode" 
+    Write-Output "Exiting with $ExitCode" 
     exit $ExitCode
 }

@@ -68,18 +68,18 @@ try {
 
     . ".\Utils.ps1"
     
-    Write-Host "Importing AzLab Module"
+    Write-Output "Importing AzLab Module"
     Import-AzLabModule -Update
     
-    Write-Host "Getting information on the currently running Template VM"
+    Write-Output "Getting information on the currently running Template VM"
     $templateVm = Get-AzLabCurrentTemplateVm
     
     $lab = $templateVm | Get-AzLabForVm
     
-    Write-Host "Details of the Lab for the template VM $env:COMPUTERNAME"
-    Write-Host "Name of the Lab: $($lab.Name)"
-    Write-Host "Name of the Lab Account: $($lab.LabAccountName)"
-    Write-Host "Resource group of the Lab Account: $($lab.ResourceGroupName)"
+    Write-Output "Details of the Lab for the template VM $env:COMPUTERNAME"
+    Write-Output "Name of the Lab: $($lab.Name)"
+    Write-Output "Name of the Lab Account: $($lab.LabAccountName)"
+    Write-Output "Resource group of the Lab Account: $($lab.ResourceGroupName)"
     
     # Register Rename VM script to run at next startup
     Write-LogFile "Registering the '$JoinAzLabADStudentRenameVmScriptName' script to run at next startup"
@@ -95,7 +95,7 @@ try {
         -DomainPassword $DomainPassword `
         -ScriptName $JoinAzLabADStudentRenameVmScriptName
 
-    Write-Host "Publishing the Lab"
+    Write-Output "Publishing the Lab"
     Write-Warning "Warning: Publishing the Lab may take up to 1 hour"
     $lab | Publish-AzLab
     
@@ -120,7 +120,7 @@ catch
 }
 
 finally {
-
-    Write-Host "Exiting with $ExitCode" 
+    Write-Warning "`n The script failed to deploy the template VM, check your input and re-run the script. `n"
+    Write-Output "Exiting with $ExitCode" 
     exit $ExitCode
 }
