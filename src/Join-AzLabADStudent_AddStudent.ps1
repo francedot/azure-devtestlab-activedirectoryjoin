@@ -125,9 +125,28 @@ try {
         }
 
         Add-LocalGroupMember -Group "Remote Desktop Users" -Member $domainUser
-    
+
         # Remove Azure credentials
         Clear-AzContext -Scope CurrentUser -Confirm:$false -Force
+
+        # TODO Should be Optional
+        # Schedule MDM Intune enrollment task
+
+        $MDMTaskName = "Schedule created by enrollment client for automatically enrolling in MDM from AAD"
+        $MDMScriptPath = Join-Path (Resolve-Path .\).Path $JoinAzLabADStudentIntuneEnrollmentScriptName
+
+        $repeat = New-TimeSpan -Minutes 5
+        $duration = New-TimeSpan -Days 1
+        $timeTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval $repeat -RepetitionDuration $duration
+
+        $taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RunOnlyIfNetworkAvailable -DontStopOnIdleEnd
+
+        Register-ScheduledScriptTask `
+                -TaskName $MDMTaskName `
+                -ScriptPath $MDMScriptPath `
+                -TimeTrigger $timeTrigger `
+                -Settings $taskSettings `
+                -AsSystem
     }
     else { # VM not claimed
         Write-LogFile "VM '$env:COMPUTERNAME' has not been claimed yet. Waiting for a student to be added..."
