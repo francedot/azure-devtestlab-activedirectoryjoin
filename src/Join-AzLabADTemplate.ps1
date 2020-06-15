@@ -114,10 +114,10 @@ catch
 {
     $message = $Error[0].Exception.Message
     if ($message) {
-        Write-Error "`nERROR: $message"
+        Write-Warning "`nERROR: $message"
     }
 
-    Write-Error "`nThe script failed to run.`n"
+    Write-Output "`nThe script failed to run.`n"
 
     # Important note: Throwing a terminating error (using $ErrorActionPreference = "stop") still returns exit 
     # code zero from the powershell script. The workaround is to use try/catch blocks and return a non-zero 

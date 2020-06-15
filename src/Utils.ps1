@@ -187,6 +187,10 @@ function Register-AzLabADStudentTask {
         [ValidateNotNullOrEmpty()]
         [string] $DomainPassword,
 
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "OUPath")]
+        [string]
+        $OUPath,
+
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Name of the script")]
         [string]
         $ScriptName
@@ -210,6 +214,7 @@ function Register-AzLabADStudentTask {
 -DomainUser '$DomainUser'
 -LocalPassword '$LocalPassword'
 -DomainPassword '$DomainPassword'
+-OUPath '$OUPath'
 -CurrentTaskName '$NextTaskName'
 "@.Replace("`n", " ").Replace("`r", "")
     
