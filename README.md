@@ -28,6 +28,8 @@ $LocalUser = "localuser"
 $DomainUser = "domainuser@contosounilab.com"
 $LocalPassword = "<LOCAL_PASSWORD>"
 $DomainPassword = "<DOMAIN_PASSWORD>"
+# Optional
+$OUPath = "OU=test,DC=onmicrosoft,DC=com"
 
 . ".\Join-AzLabADTemplate.ps1" `
     -DomainServiceAddress $DomainServiceAddress `
@@ -35,7 +37,8 @@ $DomainPassword = "<DOMAIN_PASSWORD>"
     -LocalUser $LocalUser `
     -DomainUser $DomainUser `
     -LocalPassword $LocalPassword `
-    -DomainPassword $DomainPassword
+    -DomainPassword $DomainPassword `
+    -OUPath $OUPath
 ```
 
 ### Parameters
@@ -63,6 +66,9 @@ Local Account password for the Template VM (the one specified at Lab creation).
 
 #### ***DomainPassword***
 Domain account password.
+
+#### ***OUPath*** - optional
+Organization Unit for the specific domain.
 
 ## Scripts
 ### ***Join-AzLabADTemplate***
