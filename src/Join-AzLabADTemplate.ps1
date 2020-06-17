@@ -59,7 +59,7 @@ param(
     
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
     [string]
-    $OUPath
+    $OUPath = "default"
 )
 
 ###################################################################################################

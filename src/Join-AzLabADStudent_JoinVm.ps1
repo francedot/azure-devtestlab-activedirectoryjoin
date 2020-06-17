@@ -78,7 +78,7 @@ param(
     [ValidateNotNullOrEmpty()]
     [string] $DomainPassword,
 
-    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
+    [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
     [string]
     $OUPath,
 
@@ -115,7 +115,7 @@ try {
 
     # Domain join the current VM
     Write-LogFile "Joining computer '$env:COMPUTERNAME' to domain '$Domain'"
-    if ($OUpath) {
+    if ($OUpath -ne "default") {
         Add-Computer -DomainName $Domain -Credential $domainCredential -OUPath $OUPath -Force
     }
     else {
@@ -135,6 +135,7 @@ try {
         -DomainUser $DomainUser `
         -LocalPassword $LocalPassword `
         -DomainPassword $DomainPassword `
+        -OUPath $OUPath `
         -ScriptName $JoinAzLabADStudentAddStudentScriptName
 
     Write-LogFile "Restarting VM to apply changes"
