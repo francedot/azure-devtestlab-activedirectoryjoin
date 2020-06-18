@@ -115,7 +115,7 @@ try {
 
     # Domain join the current VM
     Write-LogFile "Joining computer '$env:COMPUTERNAME' to domain '$Domain'"
-    if ($OUpath -ne "default") {
+    if ($OUpath -ne "no-op") {
         Add-Computer -DomainName $Domain -Credential $domainCredential -OUPath $OUPath -Force
     }
     else {

@@ -59,7 +59,7 @@ param(
     
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
     [string]
-    $OUPath = "default"
+    $OUPath = "no-op"
 )
 
 ###################################################################################################
@@ -70,7 +70,7 @@ $ExitCode = 0
 try {
     
     $ErrorActionPreference = "Stop"
-
+    
     . ".\Utils.ps1"
     
     Write-Output "Importing AzLab Module"
@@ -113,7 +113,7 @@ try {
 catch
 {
     $message = $Error[0].Exception.Message
-    if ($message) {
+    if ($message) {        
         Write-Warning "`nERROR: $message"
     }
 

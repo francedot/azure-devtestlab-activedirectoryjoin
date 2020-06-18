@@ -218,6 +218,7 @@ function Register-AzLabADStudentTask {
 -CurrentTaskName '$NextTaskName'
 "@.Replace("`n", " ").Replace("`r", "")
     
+    Write-LogFile("Schedule Script Task - '$nextTaskName'")
     # Schedule next startup task
     Register-ScheduledScriptTask `
             -TaskName $nextTaskName `
