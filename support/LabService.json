@@ -1,0 +1,44 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string",
+            "defaultValue":"TestLab"
+        },
+        "enabledRegionSelection": {
+            "defaultValue": false,
+            "type": "bool"
+        },
+        "idleShutdownMode": {
+            "defaultValue": "OnDisconnect",
+            "type": "string"
+        },
+        "idleGracePeriod": {
+            "defaultValue": "PT15M",
+            "type": "string"
+        },
+        "virtualNetworkResourceId": {
+            "type": "string"
+        },
+        "virtualNetworkAddressRange": {
+            "type": "string",
+            "defaultValue": "10.0.4.0/22"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.LabServices/LabAccounts",
+            "name": "[parameters('name')]",
+            "apiVersion": "2019-01-01-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "enabledRegionSelection": "[parameters('enabledRegionSelection')]",
+                "idleShutdownMode": "[parameters('idleShutdownMode')]",
+                "idleGracePeriod": "[parameters('idleGracePeriod')]",
+                "virtualNetworkResourceId": "[parameters('virtualNetworkResourceId')]",
+                "virtualNetworkAddressRange": "[parameters('virtualNetworkAddressRange')]"
+            }
+        }
+    ]
+}

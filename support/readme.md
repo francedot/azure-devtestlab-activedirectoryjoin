@@ -1,0 +1,1 @@
+The support folder is a set of template to help create an environment to emulate a hybrid AD with an AD VM, ADDS VM, ADDS, and Lab Services created.  Use at your own risk.

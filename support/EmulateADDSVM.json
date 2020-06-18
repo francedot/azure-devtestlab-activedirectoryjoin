@@ -4,11 +4,11 @@
     "parameters": {
         "networkInterfaceName": {
             "type": "string",
-            "defaultValue": "[concat(uniqueString(resourceGroup().id, deployment().name),'_nic')]"
+            "defaultValue": "[concat(uniqueString(resourceGroup().id, deployment().name),'_anic')]"
         },
         "networkSecurityGroupName": {
             "type": "string",
-            "defaultValue": "[concat(uniqueString(resourceGroup().id, deployment().name),'_nsg')]"
+            "defaultValue": "[concat(uniqueString(resourceGroup().id, deployment().name),'_ansg')]"
         },
         "networkSecurityGroupRules": {
             "type": "array",
@@ -30,44 +30,14 @@
         },
         "subnetName": {
             "type": "string",
-            "defaultValue": "default"
+            "defaultValue": "subnetB"
         },
-        "virtualNetworkName": {
-            "type": "string",
-            "defaultValue": "[concat(uniqueString(resourceGroup().id, deployment().name),'_vnet')]"
-        },
-        "addressPrefixes": {
-            "type": "array",
-            "defaultValue": [
-                "10.0.0.0/22"
-            ]
-        },
-        "subnets": {
-            "type": "array",
-            "defaultValue": [
-                {
-                    "name": "default",
-                    "properties": {
-                        "addressPrefix": "10.0.0.0/24"
-                    }
-                },
-                {
-                    "name": "subnetA",
-                    "properties": {
-                        "addressPrefix": "10.0.1.0/24"
-                    }
-                },
-                {
-                    "name": "subnetB",
-                    "properties": {
-                        "addressPrefix": "10.0.2.0/24"
-                    }
-                }
-            ]
+        "virtualNetworkId": {
+            "type": "string"
         },
         "publicIpAddressName": {
             "type": "string",
-            "defaultValue": "[concat(uniqueString(resourceGroup().id, deployment().name),'_ip')]"
+            "defaultValue": "[concat(uniqueString(resourceGroup().id, deployment().name),'_aip')]"
         },
         "publicIpAddressType": {
             "type": "string",
@@ -79,7 +49,7 @@
         },
         "virtualMachineName": {
             "type": "string",
-            "defaultValue": "AADEmulateVM"
+            "defaultValue": "ADDSEmulateVM"
         },
         "osDiskType": {
             "type": "string",
@@ -91,27 +61,22 @@
         },
         "adminUsername": {
             "type": "string",
-            "defaultValue": "AADVmAdmin"
+            "defaultValue": "ADDSVmAdmin"
         },
         "adminPassword": {
             "type": "secureString"
         },
         "diagnosticsStorageAccountName": {
             "type": "string",
-            "defaultValue": "[concat(uniqueString(resourceGroup().id, deployment().name),'diag')]"
+            "defaultValue": "[concat(uniqueString(resourceGroup().id, deployment().name),'diaga')]"
         },
-        "diagnosticsStorageAccountType": {
-            "type": "string",
-            "defaultValue": "Standard_LRS"
-        },
-        "diagnosticsStorageAccountKind": {
-            "type": "string",
-            "defaultValue": "Storage"
+        "diagnosticsStorageAccountId": {
+            "type": "string"
         }
     },
     "variables": {
         "nsgId": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]",
-        "vnetId": "[resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "vnetId": "[parameters('virtualNetworkId')]",
         "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
     },
     "resources": [
@@ -122,7 +87,6 @@
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[concat('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]",
-                "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
                 "[concat('Microsoft.Network/publicIpAddresses/', parameters('publicIpAddressName'))]"
             ],
             "properties": {
@@ -155,18 +119,6 @@
             }
         },
         {
-            "name": "[parameters('virtualNetworkName')]",
-            "type": "Microsoft.Network/virtualNetworks",
-            "apiVersion": "2019-09-01",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "addressSpace": {
-                    "addressPrefixes": "[parameters('addressPrefixes')]"
-                },
-                "subnets": "[parameters('subnets')]"
-            }
-        },
-        {
             "name": "[parameters('publicIpAddressName')]",
             "type": "Microsoft.Network/publicIpAddresses",
             "apiVersion": "2019-02-01",
@@ -184,8 +136,7 @@
             "apiVersion": "2019-07-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]",
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticsStorageAccountName'))]"
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]"
             ],
             "properties": {
                 "hardwareProfile": {
@@ -229,45 +180,12 @@
                     }
                 }
             }
-        },
-        {
-            "name": "[parameters('diagnosticsStorageAccountName')]",
-            "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2019-06-01",
-            "location": "[resourceGroup().location]",
-            "properties": {},
-            "kind": "[parameters('diagnosticsStorageAccountKind')]",
-            "sku": {
-                "name": "[parameters('diagnosticsStorageAccountType')]"
-            }
-        },
-        {
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "apiVersion": "2019-12-01",
-            "name": "[concat(parameters('virtualMachineName'),'/', 'InstallADDSAndDNS')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
-            ],
-            "properties": {
-                "publisher": "Microsoft.Compute",
-                "type": "CustomScriptExtension",
-                "typeHandlerVersion": "1.7",
-                "autoUpgradeMinorVersion":true,
-                "settings": {
-                    "commandToExecute": "[concat('powershell.exe Install-WindowsFeature -name AD-Domain-Services -IncludeManagementTools && powershell.exe Install-ADDSForest -DomainName corp.', parameters('virtualMachineName'),'.com -SafeModeAdministratorPassword (ConvertTo-SecureString ', parameters('adminPassword'),' -AsPlainText -Force) -Force')]"
-                }
-            }
-          }
+        }
     ],
     "outputs": {
-        "virtualNetworkId": {
+        "adminUsername": {
             "type": "string",
-            "value": "[variables('vnetId')]"
-        },
-        "diagnosticsStorageAccountId":{
-            "type": "string",
-            "value": "[resourceId(resourceGroup().name,'Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName'))]"
+            "value": "[parameters('adminUsername')]"
         }
     }
 }
