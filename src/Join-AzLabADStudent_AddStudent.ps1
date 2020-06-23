@@ -146,7 +146,7 @@ try {
         # Instead than pulling the MDM Enrollment Task from the AD Controller GPO, we create one programatically
 
         $MDMTaskName = "Schedule created by enrollment client for automatically enrolling in MDM from AAD"
-        $MDMScriptPath = Join-Path (Resolve-Path .\).Path $JoinAzLabADStudentMDMEnrollmentScriptName
+        $MDMScriptPath = Join-Path (Resolve-Path .\).Path $JoinAzLabADStudentEnrollMDMScriptName
 
         # Task executing every 5 minutes at max 1 day
         $MDMTaskTrigger = `
