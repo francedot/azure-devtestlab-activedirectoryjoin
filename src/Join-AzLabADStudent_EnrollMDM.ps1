@@ -5,13 +5,12 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
 .SYNOPSIS
-This script is part of the scripts chain for joining a student VM to an Active Directory domain. It renames the computer with a unique ID. Then it schedules the actual join script to run after reboot.
+This script is part of the scripts chain for joining a student VM to an Active Directory domain. It enroll the computer to the MDM service.
+TODO Ideally this can be abstracted based on the MDM Service, e.g Intune (on-cloud) vs SCCM (on-prem)
 .LINK https://docs.microsoft.com/en-us/azure/lab-services/classroom-labs/how-to-connect-peer-virtual-network
 .EXAMPLE
 . ".\Join-AzLabADStudent_IntuneEnrollment.ps1"
 #>
-
-###################################################################################################
 
 ###################################################################################################
 
@@ -37,28 +36,12 @@ try {
     $tenantName = ($adJoinStatus | Where-Object { $_.State -eq "TenantName" } | Select-Object -First 1).Status
     Write-LogFile "Device is Azure AD Joined to the tenant $tenantName"
 
-    # Check whether the AzureAdPrt token has been requested.
+    # TODO Check whether the AzureAdPrt token has been requested.
     # Without the token we cannot proceed with the Intune enrollment.
-
     # The whole token acquisition process documented here: https://jairocadena.com/2016/01/18/how-domain-join-is-different-in-windows-10-with-azure-ad/
     
-    # TODO Check the AzureAdPrt is set. Must be run with the domain account session
-    $azureAdPrt = ($adJoinStatus | Where-Object { $_.State -eq "AzureAdPrt" } | Select-Object -First 1).Status
-    # $s = New-PSSession -ComputerName MyComputerName -Credential domain\username
-    # Invoke-Command -Session $s -ScriptBlock { dsregcmd /status }
-    # if ($azureAdPrt -ieq "YES") {
-        # TODO Wait and check for enrollment done
-    # }
-
     Write-LogFile "Trying to enroll the device into the MDM service"
     Join-DeviceMDM
-
-    # During Windows sign in, the Azure AD CloudAP plugin requests a PRT from Azure AD
-    # using the credentials provided by the user. It also caches the PRT to enable cached
-    # sign in when the user does not have access to an internet connection
-    # No way to force token refresh programatically. We have to wait for next logon.
-    # https://docs.microsoft.com/en-us/azure/active-directory/devices/concept-primary-refresh-token#key-considerations
-
 }
 catch
 {

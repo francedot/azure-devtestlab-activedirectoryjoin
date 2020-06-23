@@ -25,6 +25,10 @@ Domain User (e.g. CONTOSO\frbona or frbona@contoso.com). It must have permission
 Password of the Local User.
 .PARAMETER DomainPassword
 Password of the Domain User.
+.PARAMETER EnrollMDM
+Whether to enroll the VMs to Intune (for Hybrid AD only).
+.PARAMETER CurrentTaskName
+Name of the task this script is run from (optional).
 .NOTES
 .EXAMPLE
 . ".\Join-AzLabADStudent_AddStudent.ps1" `
@@ -76,6 +80,10 @@ param(
     [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Password of the Domain User.")]
     [ValidateNotNullOrEmpty()]
     [string] $DomainPassword,
+
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to enroll the VMs to Intune (for Hybrid AD only)")]
+    [switch]
+    $EnrollMDM = $false,
 
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Name of the task this script is run from (optional).")]
     [string]
@@ -129,23 +137,39 @@ try {
         # Remove Azure credentials
         Clear-AzContext -Scope CurrentUser -Confirm:$false -Force
 
-        # TODO Should be Optional
-        # Schedule MDM Intune enrollment task
+        if (-not $EnrollMDM) {
+            return
+        }
+        # else we proceed scheduling the MDM Intune enrollment task
+
+        # https://docs.microsoft.com/en-us/windows/client-management/mdm/enroll-a-windows-10-device-automatically-using-group-policy
+        # Instead than pulling the MDM Enrollment Task from the AD Controller GPO, we create one programatically
 
         $MDMTaskName = "Schedule created by enrollment client for automatically enrolling in MDM from AAD"
-        $MDMScriptPath = Join-Path (Resolve-Path .\).Path $JoinAzLabADStudentIntuneEnrollmentScriptName
+        $MDMScriptPath = Join-Path (Resolve-Path .\).Path $JoinAzLabADStudentMDMEnrollmentScriptName
 
-        $repeat = New-TimeSpan -Minutes 5
-        $duration = New-TimeSpan -Days 1
-        $timeTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval $repeat -RepetitionDuration $duration
+        # Task executing every 5 minutes at max 1 day
+        $MDMTaskTrigger = `
+            New-ScheduledTaskTrigger `
+                -Once `
+                -At (Get-Date).Date `
+                -RepetitionInterval (New-TimeSpan -Minutes 5) `
+                -RepetitionDuration (New-TimeSpan -Days 1)
 
-        $taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RunOnlyIfNetworkAvailable -DontStopOnIdleEnd
+        $MDMTaskSettings = `
+            New-ScheduledTaskSettingsSet `
+                -AllowStartIfOnBatteries `
+                -DontStopIfGoingOnBatteries `
+                -StartWhenAvailable `
+                -RunOnlyIfNetworkAvailable `
+                -DontStopOnIdleEnd
 
+        # Must execute this task as SYSTEM
         Register-ScheduledScriptTask `
                 -TaskName $MDMTaskName `
                 -ScriptPath $MDMScriptPath `
-                -TimeTrigger $timeTrigger `
-                -Settings $taskSettings `
+                -TimeTrigger $MDMTaskTrigger `
+                -Settings $MDMTaskSettings `
                 -AsSystem
     }
     else { # VM not claimed

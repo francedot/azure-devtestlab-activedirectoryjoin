@@ -85,7 +85,7 @@ Updates the DNS settings based on the Domain Services address/es and performs th
 Checks whether the VM has been claimed by a student and eventually adds the student to the local RDP group.
 
 ### ***Join-AzLabADStudent_EnrollMDM (step IV)***
-Checks the VM is currently Azure AD joined. If os, it enrolls the VM to Intune using the user AAD credentials.
+Checks the device is Azure AD joined. If so, it enrolls the VM to Intune using the user AAD credentials.
 
 **Note**: Applies only to Hybrid AD joined devices. Student must be assigned a valid Intune license. Other requirements for Intune can be found [here](https://docs.microsoft.com/en-us/windows/client-management/mdm/enroll-a-windows-10-device-automatically-using-group-policy#verify-auto-enrollment-requirements-and-settings). 
 
