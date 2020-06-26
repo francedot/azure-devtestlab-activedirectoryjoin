@@ -17,6 +17,7 @@ $global:AzLabServicesModulePath = Join-Path -Path (Resolve-Path ./) -ChildPath $
 $global:JoinAzLabADStudentRenameVmScriptName = "Join-AzLabADStudent_RenameVm.ps1"
 $global:JoinAzLabADStudentJoinVmScriptName = "Join-AzLabADStudent_JoinVm.ps1"
 $global:JoinAzLabADStudentAddStudentScriptName = "Join-AzLabADStudent_AddStudent.ps1"
+$global:JoinAzLabADStudentIntuneEnrollmentScriptName = "Join-AzLabADStudent_IntuneEnrollment.ps1"
 
 function Import-RemoteModule {
     param(
@@ -90,19 +91,31 @@ function Register-ScheduledScriptTask {
         
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Arguments to the .ps1 script")]
         [string]
-        $Arguments,
+        $Arguments = "",
 
-        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Local Account username")]
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Local Account username")]
         [string]
         $LocalUser,
 
-        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Local Account password")]
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Local Account password")]
         [string]
         $LocalPassword,
 
-        [parameter(Mandatory=$true)]
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Event triggering the task (Startup, Logon, Shutdown, Logoff)")]
         [ValidateSet("Startup","Logon","Shutdown","Logoff")] 
         [string] $EventTrigger,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specifies an array of one or more trigger objects that start a scheduled task. A task can have a maximum of 48 triggers")]
+        [CimInstance[]] 
+        $TimeTrigger,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specifies a configuration that the Task Scheduler service uses to determine how to run a task")]
+        [CimInstance] 
+        $Settings,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to execute the command as SYSTEM")]
+        [switch]
+        $AsSystem = $false,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to run the script once if successful")]
         [switch]
@@ -128,6 +141,13 @@ function Register-ScheduledScriptTask {
     $taskActionArgument = "-ExecutionPolicy Bypass -Command `"try { . '$scriptPath' $Arguments $runOnceCommand $restartCommand } catch { Write `$_.Exception.Message | Out-File ScheduledScriptTask_Log.txt } finally { } `""
     $taskAction = New-ScheduledTaskAction -Execute "$PSHome\powershell.exe" -Argument $taskActionArgument -WorkingDirectory $scriptDirectory
     
+    $params = @{
+        Force    = $True
+        Action   = $taskAction
+        RunLevel = "Highest"
+        TaskName = $TaskName
+    }
+
     if ($EventTrigger -eq "Startup") {
         $taskTrigger = New-ScheduledTaskTrigger -AtStartup
     }
@@ -135,15 +155,25 @@ function Register-ScheduledScriptTask {
         $taskTrigger = New-ScheduledTaskTrigger -AtLogOn
     }
     # TODO add support for Shutdown and Logoff triggers through eventID: https://community.spiceworks.com/how_to/123434-run-powershell-script-on-windows-event
-    
-    $params = @{
-        Force    = $True
-        Action   = $taskAction
-        Trigger  = $taskTrigger
-        User     = $LocalUser
-        Password = $LocalPassword
-        RunLevel = "Highest"
-        TaskName = $TaskName
+
+    if ($TimeTrigger) {
+        $taskTrigger += $TimeTrigger
+    }
+
+    if ($taskTrigger) {
+        $params.Add("Trigger", $taskTrigger)
+    }
+
+    if ($Settings) {
+        $params.Add("Settings", $Settings)
+    }
+
+    if ($AsSystem) {
+        $params.Add("User", "NT AUTHORITY\SYSTEM")
+    }
+    else {
+        $params.Add("User", $LocalUser)
+        $params.Add("Password", $LocalPassword)
     }
 
     Register-ScheduledTask @params
@@ -247,6 +277,8 @@ function Get-UniqueStudentVmName {
     # Name of a VM in the VM pool: ML-EnvVm-987312527 -> 987312527
     # First 9 digits for Pool VM. Second 6 digits for Template
 
+    # TODO convert 1st digit to ASCII character
+
     # Computer name cannot start with a digit. Prepending a 'M'. Last digit of $TemplateVmId is left out.
     return "M" + $StudentVmId + $TemplateVmId
 }
@@ -323,6 +355,29 @@ function Get-AzLabTemplateVmName {
 
     $results = $TemplateVm.properties.resourceSettings.referenceVm.vmResourceId | Select-String -Pattern '([^/]*)$'
     $results.Matches.Value | Select-Object -Index 0
+}
+
+function Get-AzureADJoinStatus {
+    
+    $status = dsregcmd /status 
+    $status.Replace(":", ' ') | 
+        ForEach-Object { $_.Trim() }  | 
+        ConvertFrom-String -PropertyNames 'State', 'Status'
+} 
+
+function Join-DeviceMDM {
+    param(
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to restart the system upon succesful completion")]
+        [switch]
+        $UseAADDeviceCredential = $false
+    )
+
+    if ($UseAADDeviceCredential){
+        . "$env:windir\system32\deviceenroller.exe" /c /AutoEnrollMDMUsingAADDeviceCredential
+    }
+    else {
+        . "$env:windir\system32\deviceenroller.exe" /c /AutoEnrollMDM
+    }
 }
 
 function New-SerializedStringArray {
