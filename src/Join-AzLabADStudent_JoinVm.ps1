@@ -84,7 +84,7 @@ param(
 
     [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
     [string]
-    $OUPath,
+    $OUPath = "no-op",
     
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to enroll the VMs to Intune (for Hybrid AD only)")]
     [switch]
