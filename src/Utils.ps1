@@ -17,7 +17,7 @@ $global:AzLabServicesModulePath = Join-Path -Path (Resolve-Path ./) -ChildPath $
 $global:JoinAzLabADStudentRenameVmScriptName = "Join-AzLabADStudent_RenameVm.ps1"
 $global:JoinAzLabADStudentJoinVmScriptName = "Join-AzLabADStudent_JoinVm.ps1"
 $global:JoinAzLabADStudentAddStudentScriptName = "Join-AzLabADStudent_AddStudent.ps1"
-$global:JoinAzLabADStudentIntuneEnrollmentScriptName = "Join-AzLabADStudent_IntuneEnrollment.ps1"
+$global:JoinAzLabADStudentEnrollMDMScriptName = "Join-AzLabADStudent_EnrollMDM.ps1"
 
 function Import-RemoteModule {
     param(
@@ -220,6 +220,10 @@ function Register-AzLabADStudentTask {
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "OUPath")]
         [string]
         $OUPath,
+        
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to enroll the VMs to Intune (for Hybrid AD only)")]
+        [switch]
+        $EnrollMDM = $false,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Name of the script")]
         [string]
@@ -245,6 +249,7 @@ function Register-AzLabADStudentTask {
 -LocalPassword '$LocalPassword'
 -DomainPassword '$DomainPassword'
 -OUPath '$OUPath'
+-EnrollMDM:`$$EnrollMDM
 -CurrentTaskName '$NextTaskName'
 "@.Replace("`n", " ").Replace("`r", "")
     
@@ -358,7 +363,6 @@ function Get-AzLabTemplateVmName {
 }
 
 function Get-AzureADJoinStatus {
-    
     $status = dsregcmd /status 
     $status.Replace(":", ' ') | 
         ForEach-Object { $_.Trim() }  | 
@@ -374,8 +378,7 @@ function Join-DeviceMDM {
 
     if ($UseAADDeviceCredential){
         . "$env:windir\system32\deviceenroller.exe" /c /AutoEnrollMDMUsingAADDeviceCredential
-    }
-    else {
+    } else {
         . "$env:windir\system32\deviceenroller.exe" /c /AutoEnrollMDM
     }
 }

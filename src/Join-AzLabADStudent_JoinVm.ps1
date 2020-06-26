@@ -25,6 +25,10 @@ Domain User (e.g. CONTOSO\frbona or frbona@contoso.com). It must have permission
 Password of the Local User.
 .PARAMETER DomainPassword
 Password of the Domain User.
+.PARAMETER EnrollMDM
+Whether to enroll the VMs to Intune (for Hybrid AD only).
+.PARAMETER CurrentTaskName
+Name of the task this script is run from (optional).
 .NOTES
 .EXAMPLE
 . ".\Join-AzLabADStudent_JoinVm.ps1" `
@@ -81,6 +85,10 @@ param(
     [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
     [string]
     $OUPath,
+    
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to enroll the VMs to Intune (for Hybrid AD only)")]
+    [switch]
+    $EnrollMDM = $false,
 
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Name of the task this script is run from (optional).")]
     [string]
@@ -136,7 +144,8 @@ try {
         -LocalPassword $LocalPassword `
         -DomainPassword $DomainPassword `
         -OUPath $OUPath `
-        -ScriptName $JoinAzLabADStudentAddStudentScriptName
+        -ScriptName $JoinAzLabADStudentAddStudentScriptName `
+        -EnrollMDM:$EnrollMDM
 
     Write-LogFile "Restarting VM to apply changes"
     Restart-Computer -Force

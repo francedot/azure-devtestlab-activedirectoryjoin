@@ -3,7 +3,7 @@
 These scripts can be used to join Lab Services VMs to an Active Directory Domain.
 VMs can be joined to:
 - **On-premises AD Domains**
-- **Hybrid AD Domains**: An on-prem AD which is connected to an Azure Active Directory through [Azure AD Connect](https://docs.microsoft.com/en-us/azure/active-directory/hybrid/how-to-connect-install-prerequisites). AD Domain Services is installed on a on-prem server.
+- **Hybrid AD Domains**: An on-prem AD which is connected to an Azure Active Directory through [Azure AD Connect](https://docs.microsoft.com/en-us/azure/active-directory/hybrid/how-to-connect-install-prerequisites). AD Domain Services is installed on a on-prem server. Applies also to federated domains.
 - **Azure AD DS Domains**: For full-cloud AD (Azure AD + Azure AD DS) or Hybrid AD with secondary Domain Services on Azure.
 
 ## Prerequisites
@@ -22,7 +22,7 @@ VMs can be joined to:
 From the Template VM:
 
 ```powershell
-$DomainServiceAddress = '10.0.23.5','10.0.23.6'
+$DomainServiceAddress = '<PRIMARY_DS_IP>','<SECONDARY_DS_IP>'
 $Domain = "contosounilab.com"
 $LocalUser = "localuser"
 $DomainUser = "domainuser@contosounilab.com"
@@ -39,6 +39,7 @@ $OUPath = "OU=test,DC=onmicrosoft,DC=com"
     -LocalPassword $LocalPassword `
     -DomainPassword $DomainPassword `
     -OUPath $OUPath
+    -EnrollMDM
 ```
 
 ### Parameters
@@ -67,13 +68,20 @@ Local Account password for the Template VM (the one specified at Lab creation).
 #### ***DomainPassword***
 Domain account password.
 
-#### ***OUPath*** - optional
-Organization Unit for the specific domain.
+#### ***OUPath***
+(Optional) Organization Unit for the specific domain.
 
 ## Scripts
+#### ***EnrollMDM***
+(Optional) Whether to enroll the VMs to Intune (for Hybrid AD only).
+
+## Template VM
 ### ***Join-AzLabADTemplate***
 Main script to be run from the Template VM. It gets details on the currently running Template VM and Lab. It then schedules the scripts chain starting with ***Join-AzLabADStudent_RenameVm.ps1*** and publishes the Lab.
 
+**Note**: Only the Student VMs are domain-joined. Template VM is used to run the ***Join-AzLabADTemplate.ps1*** script and trigger the next chain of scripts in the Student VMs.
+
+## Scripts Chain
 ### ***Join-AzLabADStudent_RenameVm (step I)***
 Gets the details on the currently running Student VM and renames the computer with a unique name. It then schedules the startup script ***Join-AzLabADStudent_JoinVm.ps1*** to run at next boot.
 
@@ -82,6 +90,11 @@ Updates the DNS settings based on the Domain Services address/es and performs th
 
 ### ***Join-AzLabADStudent_AddStudent (step III)***
 Checks whether the VM has been claimed by a student and eventually adds the student to the local RDP group.
+
+### ***Join-AzLabADStudent_EnrollMDM (step IV)***
+Checks the device is Azure AD joined. If so, it enrolls the VM to Intune using the user AAD credentials.
+
+**Note**: Applies only to Hybrid AD joined devices. Student must be assigned a valid Intune license. Other requirements for Intune can be found [here](https://docs.microsoft.com/en-us/windows/client-management/mdm/enroll-a-windows-10-device-automatically-using-group-policy#verify-auto-enrollment-requirements-and-settings). 
 
 ### ***Set-AzLabADVms (optional)***
 Optional script to be run from the Template VM. It spins up all the VMs leaving enough time for the domain join scripts to be executed before shutting down the VMs.

@@ -19,6 +19,8 @@ Domain User (e.g. CONTOSO\frbona or frbona@contoso.com). It must have permission
 Password of the Local User.
 .PARAMETER DomainPassword
 Password of the Domain User.
+.PARAMETER EnrollMDM
+Whether to enroll the VMs to Intune (for Hybrid AD only).
 .NOTES
 .EXAMPLE
 . ".\Join-AzLabADTemplate.ps1" `
@@ -29,6 +31,8 @@ Password of the Domain User.
     -LocalPassword 'localPassword' `
     -DomainPassword 'domainPassword `
     -OUPath 'OU=testOU,DC=domain,DC=Domain,DC=com'
+    -DomainPassword 'domainPassword' `
+    -EnrollMDM
 #>
 
 [CmdletBinding()]
@@ -59,7 +63,11 @@ param(
     
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
     [string]
-    $OUPath = "no-op"
+    $OUPath = "no-op",
+
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to enroll the VMs to Intune (for Hybrid AD only)")]
+    [switch]
+    $EnrollMDM = $false
 )
 
 ###################################################################################################
@@ -99,7 +107,8 @@ try {
         -LocalPassword $LocalPassword `
         -DomainPassword $DomainPassword `
         -OUPath $OUPath `
-        -ScriptName $JoinAzLabADStudentRenameVmScriptName
+        -ScriptName $JoinAzLabADStudentRenameVmScriptName `
+        -EnrollMDM:$EnrollMDM
 
     Write-Output "Publishing the Lab"
     Write-Warning "Warning: Publishing the Lab may take up to 1 hour"
