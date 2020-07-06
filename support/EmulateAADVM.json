@@ -107,6 +107,10 @@
         "diagnosticsStorageAccountKind": {
             "type": "string",
             "defaultValue": "Storage"
+        },
+        "domainName" : {
+            "type": "string",
+            "defaultValue": "BellowsCollegeNW"
         }
     },
     "variables": {
@@ -255,7 +259,7 @@
                 "typeHandlerVersion": "1.7",
                 "autoUpgradeMinorVersion":true,
                 "settings": {
-                    "commandToExecute": "[concat('powershell.exe Install-WindowsFeature -name AD-Domain-Services -IncludeManagementTools && powershell.exe Install-ADDSForest -DomainName corp.', parameters('virtualMachineName'),'.com -SafeModeAdministratorPassword (ConvertTo-SecureString ', parameters('adminPassword'),' -AsPlainText -Force) -Force')]"
+                    "commandToExecute": "[concat('powershell.exe Install-WindowsFeature -name AD-Domain-Services -IncludeManagementTools && powershell.exe Install-ADDSForest -DomainName corp.', parameters('domainName'),'.com -SafeModeAdministratorPassword (ConvertTo-SecureString ', parameters('adminPassword'),' -AsPlainText -Force) -Force')]"
                 }
             }
           }
