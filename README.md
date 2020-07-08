@@ -28,6 +28,8 @@ $LocalUser = "localuser"
 $DomainUser = "domainuser@contosounilab.com"
 $LocalPassword = "<LOCAL_PASSWORD>"
 $DomainPassword = "<DOMAIN_PASSWORD>"
+# Optional
+$OUPath = "OU=test,DC=onmicrosoft,DC=com"
 
 . ".\Join-AzLabADTemplate.ps1" `
     -DomainServiceAddress $DomainServiceAddress `
@@ -36,6 +38,7 @@ $DomainPassword = "<DOMAIN_PASSWORD>"
     -DomainUser $DomainUser `
     -LocalPassword $LocalPassword `
     -DomainPassword $DomainPassword `
+    -OUPath $OUPath
     -EnrollMDM
 ```
 
@@ -65,6 +68,10 @@ Local Account password for the Template VM (the one specified at Lab creation).
 #### ***DomainPassword***
 Domain account password.
 
+#### ***OUPath***
+(Optional) Organization Unit for the specific domain.
+
+## Scripts
 #### ***EnrollMDM***
 (Optional) Whether to enroll the VMs to Intune (for Hybrid AD only).
 
