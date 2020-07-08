@@ -19,6 +19,8 @@ Domain User (e.g. CONTOSO\frbona or frbona@contoso.com). It must have permission
 Password of the Local User.
 .PARAMETER DomainPassword
 Password of the Domain User.
+.PARAMETER OUPath
+Organization Unit path (optional)
 .PARAMETER EnrollMDM
 Whether to enroll the VMs to Intune (for Hybrid AD only).
 .NOTES
@@ -31,7 +33,6 @@ Whether to enroll the VMs to Intune (for Hybrid AD only).
     -LocalPassword 'localPassword' `
     -DomainPassword 'domainPassword `
     -OUPath 'OU=testOU,DC=domain,DC=Domain,DC=com'
-    -DomainPassword 'domainPassword' `
     -EnrollMDM
 #>
 

@@ -41,7 +41,8 @@ Name of the task this script is run from (optional).
     -DomainUser 'domainUser' `
     -LocalPassword 'localPassword' `
     -DomainPassword 'domainPassword' `
-    -OUPath 'OU=testOU,DC=domain,DC=Domain,DC=com'
+    -OUPath 'OU=OrgUnit,DC=domain,DC=Domain,DC=com' `
+    -EnrollMDM
 #>
 
 [CmdletBinding()]

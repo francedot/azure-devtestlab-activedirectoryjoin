@@ -25,6 +25,8 @@ Domain User (e.g. CONTOSO\frbona or frbona@contoso.com). It must have permission
 Password of the Local User.
 .PARAMETER DomainPassword
 Password of the Domain User.
+.PARAMETER OUPath
+Organization Unit path (optional)
 .PARAMETER EnrollMDM
 Whether to enroll the VMs to Intune (for Hybrid AD only).
 .PARAMETER CurrentTaskName
@@ -41,7 +43,8 @@ Name of the task this script is run from (optional).
     -DomainUser 'domainUser' `
     -LocalPassword 'localPassword' `
     -DomainPassword 'domainPassword' `
-    -OUPath 'OU=testOU,DC=domain,DC=Domain,DC=com'
+    -OUPath 'OU=OrgUnit,DC=domain,DC=Domain,DC=com' `
+    -EnrollMDM
 #>
 
 [CmdletBinding()]
