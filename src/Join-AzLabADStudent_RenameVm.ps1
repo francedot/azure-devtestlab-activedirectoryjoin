@@ -25,6 +25,8 @@ Domain User (e.g. CONTOSO\frbona or frbona@contoso.com). It must have permission
 Password of the Local User.
 .PARAMETER DomainPassword
 Password of the Domain User.
+.PARAMETER OUPath
+Organization Unit path (optional)
 .PARAMETER EnrollMDM
 Whether to enroll the VMs to Intune (for Hybrid AD only).
 .PARAMETER CurrentTaskName
@@ -40,7 +42,9 @@ Name of the task this script is run from (optional).
     -LocalUser 'localUser' `
     -DomainUser 'domainUser' `
     -LocalPassword 'localPassword' `
-    -DomainPassword 'domainPassword'
+    -DomainPassword 'domainPassword' `
+    -OUPath 'OU=OrgUnit,DC=domain,DC=Domain,DC=com' `
+    -EnrollMDM
 #>
 
 [CmdletBinding()]
@@ -81,6 +85,10 @@ param(
     [ValidateNotNullOrEmpty()]
     [string] $DomainPassword,
 
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
+    [string]
+    $OUPath = "no-op",
+    
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to enroll the VMs to Intune (for Hybrid AD only)")]
     [switch]
     $EnrollMDM = $false,
@@ -149,6 +157,7 @@ try {
         -DomainUser $DomainUser `
         -LocalPassword $LocalPassword `
         -DomainPassword $DomainPassword `
+        -OUPath $OUPath `
         -ScriptName $JoinAzLabADStudentJoinVmScriptName `
         -EnrollMDM:$EnrollMDM
 

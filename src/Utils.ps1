@@ -75,7 +75,7 @@ function Write-LogFile {
     $Line = "$TimeStamp - $Message"
     Add-content -Path $Logfile -Value $Line -ErrorAction SilentlyContinue
 
-    Write-Host "Message: '$Message' has been logged to file: $LogFile"
+    Write-Output "Message: '$Message' has been logged to file: $LogFile"
 }
 
 function Register-ScheduledScriptTask {
@@ -217,6 +217,10 @@ function Register-AzLabADStudentTask {
         [ValidateNotNullOrEmpty()]
         [string] $DomainPassword,
 
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "OUPath")]
+        [string]
+        $OUPath,
+        
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to enroll the VMs to Intune (for Hybrid AD only)")]
         [switch]
         $EnrollMDM = $false,
@@ -244,10 +248,12 @@ function Register-AzLabADStudentTask {
 -DomainUser '$DomainUser'
 -LocalPassword '$LocalPassword'
 -DomainPassword '$DomainPassword'
+-OUPath '$OUPath'
 -EnrollMDM:`$$EnrollMDM
 -CurrentTaskName '$NextTaskName'
 "@.Replace("`n", " ").Replace("`r", "")
     
+    Write-LogFile("Schedule Script Task - '$nextTaskName'")
     # Schedule next startup task
     Register-ScheduledScriptTask `
             -TaskName $nextTaskName `

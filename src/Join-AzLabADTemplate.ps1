@@ -19,6 +19,8 @@ Domain User (e.g. CONTOSO\frbona or frbona@contoso.com). It must have permission
 Password of the Local User.
 .PARAMETER DomainPassword
 Password of the Domain User.
+.PARAMETER OUPath
+Organization Unit path (optional)
 .PARAMETER EnrollMDM
 Whether to enroll the VMs to Intune (for Hybrid AD only).
 .NOTES
@@ -29,7 +31,8 @@ Whether to enroll the VMs to Intune (for Hybrid AD only).
     -LocalUser 'localUser' `
     -DomainUser 'domainUser' `
     -LocalPassword 'localPassword' `
-    -DomainPassword 'domainPassword' `
+    -DomainPassword 'domainPassword `
+    -OUPath 'OU=testOU,DC=domain,DC=Domain,DC=com'
     -EnrollMDM
 #>
 
@@ -58,6 +61,10 @@ param(
     [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Password of the Domain User.")]
     [ValidateNotNullOrEmpty()]
     [string] $DomainPassword,
+    
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific Organization Path.")]
+    [string]
+    $OUPath = "no-op",
 
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to enroll the VMs to Intune (for Hybrid AD only)")]
     [switch]
@@ -72,21 +79,21 @@ $ExitCode = 0
 try {
     
     $ErrorActionPreference = "Stop"
-
+    
     . ".\Utils.ps1"
     
-    Write-Host "Importing AzLab Module"
+    Write-Output "Importing AzLab Module"
     Import-AzLabModule -Update
     
-    Write-Host "Getting information on the currently running Template VM"
+    Write-Output "Getting information on the currently running Template VM"
     $templateVm = Get-AzLabCurrentTemplateVm
     
     $lab = $templateVm | Get-AzLabForVm
     
-    Write-Host "Details of the Lab for the template VM $env:COMPUTERNAME"
-    Write-Host "Name of the Lab: $($lab.Name)"
-    Write-Host "Name of the Lab Account: $($lab.LabAccountName)"
-    Write-Host "Resource group of the Lab Account: $($lab.ResourceGroupName)"
+    Write-Output "Details of the Lab for the template VM $env:COMPUTERNAME"
+    Write-Output "Name of the Lab: $($lab.Name)"
+    Write-Output "Name of the Lab Account: $($lab.LabAccountName)"
+    Write-Output "Resource group of the Lab Account: $($lab.ResourceGroupName)"
     
     # Register Rename VM script to run at next startup
     Write-LogFile "Registering the '$JoinAzLabADStudentRenameVmScriptName' script to run at next startup"
@@ -100,10 +107,11 @@ try {
         -DomainUser $DomainUser `
         -LocalPassword $LocalPassword `
         -DomainPassword $DomainPassword `
+        -OUPath $OUPath `
         -ScriptName $JoinAzLabADStudentRenameVmScriptName `
         -EnrollMDM:$EnrollMDM
 
-    Write-Host "Publishing the Lab"
+    Write-Output "Publishing the Lab"
     Write-Warning "Warning: Publishing the Lab may take up to 1 hour"
     $lab | Publish-AzLab
     
@@ -115,11 +123,11 @@ try {
 catch
 {
     $message = $Error[0].Exception.Message
-    if ($message) {
-        Write-Error "`nERROR: $message"
+    if ($message) {        
+        Write-Warning "`nERROR: $message"
     }
 
-    Write-Error "`nThe script failed to run.`n"
+    Write-Output "`nThe script failed to run.`n"
 
     # Important note: Throwing a terminating error (using $ErrorActionPreference = "stop") still returns exit 
     # code zero from the powershell script. The workaround is to use try/catch blocks and return a non-zero 
@@ -128,7 +136,7 @@ catch
 }
 
 finally {
-
-    Write-Host "Exiting with $ExitCode" 
+    Write-Warning "`n The script failed to deploy the template VM, check your input and re-run the script. `n"
+    Write-Output "Exiting with $ExitCode" 
     exit $ExitCode
 }

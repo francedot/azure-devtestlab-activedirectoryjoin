@@ -16,6 +16,7 @@ VMs can be joined to:
     * Install the [Azure PowerShell Module](https://docs.microsoft.com/en-us/powershell/azure/install-az-ps?view=azps-2.8.0)
     * Connect to your Azure Account: ```Connect-AzAccount```
     * Set the default subscription to the one of the Lab Account: ```Select-AzSubscription -SubscriptionID <SUB_ID>```
+5) Run the Join-AzLabTemplate.ps1 from the Template VM (see Usage details below).  This script will publish the template VM.
 
 ## Usage
 
@@ -28,6 +29,8 @@ $LocalUser = "localuser"
 $DomainUser = "domainuser@contosounilab.com"
 $LocalPassword = "<LOCAL_PASSWORD>"
 $DomainPassword = "<DOMAIN_PASSWORD>"
+# Optional
+$OUPath = "OU=test,DC=onmicrosoft,DC=com"
 
 . ".\Join-AzLabADTemplate.ps1" `
     -DomainServiceAddress $DomainServiceAddress `
@@ -36,7 +39,8 @@ $DomainPassword = "<DOMAIN_PASSWORD>"
     -DomainUser $DomainUser `
     -LocalPassword $LocalPassword `
     -DomainPassword $DomainPassword `
-    -EnrollMDM
+    -OUPath $OUPath
+    -EnrollMDM #Optional switch to enroll in MDM
 ```
 
 ### Parameters
@@ -64,6 +68,9 @@ Local Account password for the Template VM (the one specified at Lab creation).
 
 #### ***DomainPassword***
 Domain account password.
+
+#### ***OUPath***
+(Optional) Organization Unit for the specific domain.
 
 #### ***EnrollMDM***
 (Optional) Whether to enroll the VMs to Intune (for Hybrid AD only).
